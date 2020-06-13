@@ -6,10 +6,11 @@ import re
 def receiveData(s):
     data = ''
     try:
-        data = s.recvfrom(65565)
+        data = s.recvfrom(65536)
         return data[0]
     except socket.timeout:
         data = ''
+        print("Timeout error")
     except:
         print("An error occured")
         sys.exc_info()
@@ -95,6 +96,7 @@ sourceAddress = socket.inet_ntoa(unpackedData[8])
 destinationAddress = socket.inet_ntoa(unpackedData[9])
 
 print("An IP packet with the size %i was captured" % totalLength)
+print("Raw data: " + str(data))
 print("\nParsed data")
 print("Version:\t\t" + str(version))
 print("Header Length:\t\t" + str(IHl*4) + 'bytes')
@@ -108,7 +110,7 @@ print("Protocol:\t\t" + getProtocol(protocolNr))
 print("Checksum:\t\t" + str(checksum))
 print("Source:\t\t\t" + sourceAddress)
 print("Destination:\t\t" + destinationAddress)
-print("Payload:\n" + data[20:])
+print("Payload:\n" + str(data[20:]))
 
 # disabled promiscuous mode
 s.ioctl(socket.SIO_RCVALL, socket.RCVALL_OFF)
