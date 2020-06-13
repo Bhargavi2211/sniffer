@@ -51,7 +51,7 @@ def getFlags(data):
     return flags
 
 def getProtocol(protocolNr):
-    protocolFile = open('Protocols', "read")
+    protocolFile = open('Protocols', 'r')
     protocolData = protocolFile.read()
     protocol = re.findall(r'\n' + str(protocolNr) + '(?:.)+\n', protocolData)
     if protocol:
@@ -77,7 +77,7 @@ s.setsockopt(socket.IPPROTO_IP, socket.IP_HDRINCL, 1)
 s.ioctl(socket.SIO_RCVALL, socket.RCVALL_ON)
 
 data = receiveData(s)
-unpackedData = struct.unpack("!BBHHHBBH4s4s", data[0:20])
+unpackedData = struct.unpack("!BBHHHBBH4s4s", data[:20])
 print(unpackedData)
 
 version_IHL = unpackedData[0]
@@ -95,7 +95,6 @@ sourceAddress = socket.inet_ntoa(unpackedData[8])
 destinationAddress = socket.inet_ntoa(unpackedData[9])
 
 print("An IP packet with the size %i was captured" % totalLength)
-print("Raw data: " + data)
 print("\nParsed data")
 print("Version:\t\t" + str(version))
 print("Header Length:\t\t" + str(IHl*4) + 'bytes')
