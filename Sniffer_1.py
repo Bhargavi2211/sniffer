@@ -7,6 +7,7 @@ def receiveData(s):
     data = ''
     try:
         data = s.recvfrom(65565)
+        return data[0]
     except socket.timeout:
         data = ''
     except:
