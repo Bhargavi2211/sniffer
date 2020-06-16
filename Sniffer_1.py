@@ -41,12 +41,14 @@ def getFlags(data):
     flagR = {0: "Reserved bit"}
     flagDF = {0: "Fragment if necessary", 1: "Do not fragment"}
     flagMF = {0: "Last fragment", 1: "More fragments"}
+    
     R = data & 0x8000
     R >>=15
     DF = data & 0x4000
     DF >>=14
     MF = data & 0x2000
     MF >>= 13
+    
     tabs = '\n\t\t\t'
     flags = flagR[R] + tabs + flagDF[DF] + tabs + flagMF[MF]
     return flags
@@ -81,6 +83,10 @@ data = receiveData(s)
 unpackedData = struct.unpack("!BBHHHBBH4s4s", data[:20])
 print(unpackedData)
 
+ip_header = data[14:34]
+ip_header = struct.unpack('!BB3HBBH4s4s', ip_header)
+ip_header_length = (ip_header[0] & 15) * 4
+
 version_IHL = unpackedData[0]
 version = version_IHL >> 4
 IHl = version_IHL & 0xF
@@ -95,6 +101,7 @@ checksum = unpackedData[7]
 sourceAddress = socket.inet_ntoa(unpackedData[8])
 destinationAddress = socket.inet_ntoa(unpackedData[9])
 
+# general for all
 print("An IP packet with the size %i was captured" % totalLength)
 print("Raw data: " + str(data))
 print("\nParsed data")
@@ -111,6 +118,25 @@ print("Checksum:\t\t" + str(checksum))
 print("Source:\t\t\t" + sourceAddress)
 print("Destination:\t\t" + destinationAddress)
 print("Payload:\n" + str(data[20:]))
+
+#just for TCP
+if protocolNr == 6:
+    tcp_header = data[(ip_header_length + 14): (ip_header_length + 34)]
+    tcp_header = struct.unpack('!HHLLBB3H', tcp_header)
+    source_port, dest_port = tcp_header[0], tcp_header[1]
+
+    identity = ((sourceAddress, source_port), (destinationAddress, dest_port))
+    identity = (min(identity[0], identity[1]),
+                max(identity[0], identity[1]))  # sort in order to club packets flowing in either direction
+
+    tcp_header_length = (tcp_header[4] >> 4) * 4
+    flags = tcp_header[5]
+
+    data_length = len(data[(14 + ip_header_length + tcp_header_length):])
+    segment_length = tcp_header_length + data_length
+    packet_length = ip_header_length + segment_length
+    print(identity, format(flags, 'b').zfill(8), data_length,
+          ("Incoming" if (sourceAddress in HOST) else "Outgoing"))
 
 # disabled promiscuous mode
 s.ioctl(socket.SIO_RCVALL, socket.RCVALL_OFF)
