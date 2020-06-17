@@ -41,14 +41,12 @@ def getFlags(data):
     flagR = {0: "Reserved bit"}
     flagDF = {0: "Fragment if necessary", 1: "Do not fragment"}
     flagMF = {0: "Last fragment", 1: "More fragments"}
-    
     R = data & 0x8000
     R >>=15
     DF = data & 0x4000
     DF >>=14
     MF = data & 0x2000
     MF >>= 13
-    
     tabs = '\n\t\t\t'
     flags = flagR[R] + tabs + flagDF[DF] + tabs + flagMF[MF]
     return flags
@@ -101,26 +99,24 @@ checksum = unpackedData[7]
 sourceAddress = socket.inet_ntoa(unpackedData[8])
 destinationAddress = socket.inet_ntoa(unpackedData[9])
 
-# general for all
 print("An IP packet with the size %i was captured" % totalLength)
-print("Raw data: " + str(data))
-print("\nParsed data")
-print("Version:\t\t" + str(version))
-print("Header Length:\t\t" + str(IHl*4) + 'bytes')
-print("Type of service:\t" + getTOS(TOS))
-print("Length:\t\t\t" + str(totalLength))
-print("ID:\t\t\t" + str(hex(ID)) + str(ID))
-print("Flags:\t\t\t" + getFlags(flags))
-print("Fragment offset:\t" + str(TTL))
-print("TTL:\t\t\t" + str(TTL))
-print("Protocol:\t\t" + getProtocol(protocolNr))
-print("Checksum:\t\t" + str(checksum))
-print("Source:\t\t\t" + sourceAddress)
-print("Destination:\t\t" + destinationAddress)
-print("Payload:\n" + str(data[20:]))
-
-#just for TCP
 if protocolNr == 6:
+    print("Raw data: " + str(data))
+    print("\nParsed data")
+    print("Version:\t\t" + str(version))
+    print("Header Length:\t\t" + str(IHl * 4) + 'bytes')
+    print("Type of service:\t" + getTOS(TOS))
+    print("Length:\t\t\t" + str(totalLength))
+    print("ID:\t\t\t" + str(hex(ID)) + str(ID))
+    print("Flags:\t\t\t" + getFlags(flags))
+    print("Fragment offset:\t" + str(TTL))
+    print("TTL:\t\t\t" + str(TTL))
+    print("Protocol:\t\t" + getProtocol(protocolNr))
+    print("Checksum:\t\t" + str(checksum))
+    print("Source:\t\t\t" + sourceAddress)
+    print("Destination:\t\t" + destinationAddress)
+    print("Payload:\n" + str(data[20:]))
+    
     tcp_header = data[(ip_header_length + 14): (ip_header_length + 34)]
     tcp_header = struct.unpack('!HHLLBB3H', tcp_header)
     source_port, dest_port = tcp_header[0], tcp_header[1]
@@ -137,6 +133,9 @@ if protocolNr == 6:
     packet_length = ip_header_length + segment_length
     print(identity, format(flags, 'b').zfill(8), data_length,
           ("Incoming" if (sourceAddress in HOST) else "Outgoing"))
+
+else:
+    print("TCP packet wasn't captured")
 
 # disabled promiscuous mode
 s.ioctl(socket.SIO_RCVALL, socket.RCVALL_OFF)
